@@ -11,7 +11,8 @@
 // ============================================================
 
 import React, { useState, useEffect } from 'react';
-import { supabase, signOut }  from '../lib/supabaseClient';
+// import { supabase, signOut } — supabase unused until real fetch enabled
+import { signOut } from '../lib/supabaseClient';
 import PostComposer           from '../components/PostComposer';
 import PostCard               from '../components/PostCard';
 import HuddleLogo             from '../assets/Huddle_Logo_Subject.png';
@@ -109,8 +110,8 @@ export default function HuddlePage({ session }) {
   const currentUserId = session?.user?.id;
 
   const [activeTab,       setActiveTab]       = useState(TABS.FEED);
-  const [huddle,          setHuddle]          = useState(MOCK_HUDDLE);
-  const [activeWord,      setActiveWord]      = useState(MOCK_WORD);
+  const [huddle,          setHuddle]          = useState(MOCK_HUDDLE);   // eslint-disable-line no-unused-vars
+  const [activeWord,      setActiveWord]      = useState(MOCK_WORD);     // eslint-disable-line no-unused-vars
   const [posts,           setPosts]           = useState(MOCK_POSTS);
   const [selectedLetters, setSelectedLetters] = useState([]); // multi-select
   const [composerOpen,    setComposerOpen]    = useState(false);

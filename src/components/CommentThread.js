@@ -13,7 +13,7 @@
 // ============================================================
 
 import React, { useState, useEffect, useRef } from 'react';
-import { supabase } from '../lib/supabaseClient';
+// import { supabase } from '../lib/supabaseClient'; // uncomment when connecting to Supabase
 
 // ─────────────────────────────────────────
 // Mock comments for development
@@ -67,7 +67,7 @@ export default function CommentThread({ postId, currentUserId, onCountChange }) 
   // ─────────────────────────────────────────
   useEffect(() => {
     fetchComments();
-  }, [postId]);
+  }, [postId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function fetchComments() {
     setLoading(true);
