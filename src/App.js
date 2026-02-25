@@ -5,10 +5,6 @@
 //   • Auth state (logged in / logged out)
 //   • Invite token detection in the URL (?invite=TOKEN)
 //   • Route switching between LoginPage and HuddlePage
-//
-// DEV MODE: Session is mocked to bypass login screen.
-// When ready to deploy, replace the two lines marked
-// DEV MODE below with the two lines marked PRODUCTION.
 // ============================================================
 
 import React, { useEffect, useState } from 'react';
@@ -24,17 +20,10 @@ import './App.css';
 // App shell — manages session state
 // ─────────────────────────────────────────
 export default function App() {
-  // DEV MODE — bypasses login, goes straight to HuddlePage
-  const [session, setSession] = useState(null);
+  const [session, setSession] = useState(undefined);
   const [loading, setLoading] = useState(true);
 
-  // PRODUCTION — uncomment these two lines and remove the two DEV MODE lines above
-  // const [session, setSession] = useState(undefined);
-  // const [loading, setLoading] = useState(true);
-
   useEffect(() => {
-    //PRODUCTION — uncomment this entire block when deploying
-    //*
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
@@ -48,10 +37,9 @@ export default function App() {
     );
 
     return () => subscription.unsubscribe();
-   
   }, []);
 
-  // Show nothing while we check session (avoids flicker)
+  // Show spinner while we check session (avoids flicker to login)
   if (loading) {
     return (
       <div className="app-loading">
@@ -102,14 +90,12 @@ export default function App() {
 // adds the user to the huddle, then redirects home.
 // ─────────────────────────────────────────
 function InviteHandler({ session }) {
-  // react-router-dom v6 way to get URL params
   const { token } = useParams();
   const navigate  = useNavigate();
   const [status, setStatus] = useState('Joining huddle…');
 
   useEffect(() => {
     async function joinHuddle() {
-      // 1. Look up the huddle by invite token
       const { data: huddle, error: findError } = await supabase
         .from('huddles')
         .select('id, name')
@@ -122,14 +108,12 @@ function InviteHandler({ session }) {
         return;
       }
 
-      // 2. Insert membership row (RLS allows this if user is authenticated)
       const { error: joinError } = await supabase
         .from('huddle_members')
         .insert({ huddle_id: huddle.id, user_id: session.user.id })
         .select()
         .single();
 
-      // Ignore duplicate key error — user is already a member
       if (joinError && !joinError.message.includes('duplicate')) {
         setStatus('Could not join. Please try again.');
         setTimeout(() => navigate('/'), 2000);
