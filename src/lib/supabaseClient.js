@@ -63,6 +63,30 @@ export async function sendMagicLink(email, redirectTo = window.location.origin) 
 }
 
 /**
+ * Send a 6-digit OTP code to the user's email.
+ * User enters the code directly in the app — no redirect needed.
+ */
+export async function sendOtpCode(email) {
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: { shouldCreateUser: true },
+  });
+  return { error };
+}
+
+/**
+ * Verify the 6-digit OTP code the user received.
+ */
+export async function verifyOtpCode(email, token) {
+  const { data, error } = await supabase.auth.verifyOtp({
+    email,
+    token,
+    type: 'email',
+  });
+  return { data, error };
+}
+
+/**
  * Sign the current user out.
  */
 export async function signOut() {

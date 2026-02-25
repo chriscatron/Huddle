@@ -888,7 +888,7 @@ img { max-width: 100%; display: block; }
 }
 
 .huddle-view-sub {
-  font-size: 13px; color: var(--ink-soft); font-style: italic; text-align: center;
+  font-size: 13px; color: var(--ink-mid); font-style: italic; text-align: center;
 }
 
 .huddle-view-word {
@@ -968,3 +968,47 @@ img { max-width: 100%; display: block; }
 
   .post-card:hover { background: rgba(248,243,232,0.5); }
 }
+
+/* ─────────────────────────────────────────
+   OTP Code Entry
+   ───────────────────────────────────────── */
+.login-otp-section {
+  display: flex; flex-direction: column;
+  align-items: center; gap: var(--s4);
+}
+
+.login-otp-prompt {
+  font-size: 15px; color: var(--ink-soft);
+  text-align: center; line-height: 1.6;
+}
+.login-otp-prompt strong { color: var(--ink); }
+
+.login-otp-boxes {
+  display: flex; gap: var(--s2); justify-content: center;
+}
+
+.login-otp-box {
+  width: 44px; height: 56px;
+  text-align: center; font-size: 24px;
+  font-family: var(--heading); font-weight: 700;
+  color: var(--purple-dark);
+  background: var(--surface-2);
+  border: 2px solid var(--border-mid);
+  border-radius: var(--r-md);
+  outline: none; caret-color: transparent;
+  transition: border-color 0.15s;
+}
+.login-otp-box:focus {
+  border-color: var(--purple);
+  background: var(--surface);
+}
+.login-otp-box.error {
+  border-color: var(--heart);
+  background: rgba(184,90,106,0.06);
+}
+
+.login-otp-footer {
+  display: flex; align-items: center; gap: var(--s3);
+  font-size: 13px;
+}
+.login-otp-divider { color: var(--ink-faint); }
