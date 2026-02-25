@@ -24,15 +24,23 @@ export default function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Check if URL contains auth tokens (magic link redirect)
+    const hasAuthTokens = window.location.hash.includes('access_token') ||
+                          window.location.hash.includes('error');
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      setLoading(false);
+      if (!hasAuthTokens) setLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session);
         setLoading(false);
+        // Clean up the URL hash after processing
+        if (window.location.hash.includes('access_token')) {
+          window.history.replaceState(null, '', window.location.pathname);
+        }
       }
     );
 
