@@ -11,86 +11,11 @@
 // ============================================================
 
 import React, { useState, useEffect } from 'react';
-// import { supabase, signOut } — supabase unused until real fetch enabled
-import { signOut } from '../lib/supabaseClient';
+import { supabase, signOut } from '../lib/supabaseClient';
 import PostComposer           from '../components/PostComposer';
 import PostCard               from '../components/PostCard';
 import HuddleLogo             from '../assets/Huddle_Logo_Subject.png';
 
-// ─────────────────────────────────────────
-// Mock data
-// ─────────────────────────────────────────
-const MOCK_HUDDLE = {
-  id:           'huddle-001',
-  name:         'Grace Girls',
-  invite_token: 'abc123def456',
-  member_count: 6,
-};
-
-const MOCK_WORD = {
-  id:   'word-001',
-  word: 'GRACE',
-  letter_meanings: {
-    G: 'Grateful',
-    R: 'Rant',
-    A: 'Aha',
-    C: 'Challenge',
-    E: 'Educate',
-  },
-  is_active: true,
-};
-
-const MOCK_POSTS = [
-  {
-    id: 'post-001', huddle_id: 'huddle-001', author_id: 'user-debbie',
-    body: 'Had a quiet moment in the car and realized how much I take "normal days" for granted. Today felt simple, and that felt like a gift.',
-    letters: ['G'], word_snapshot: 'GRACE',
-    meanings_snapshot: { G: 'Grateful', R: 'Rant', A: 'Aha', C: 'Challenge', E: 'Educate' },
-    photo_url: null,
-    created_at: new Date(Date.now() - 3600000 * 2).toISOString(),
-    author: { username: 'Debbie', avatar_url: null },
-    reactions: [
-      { id: 'r1', user_id: 'user-ashley', reaction_type: 'heart' },
-      { id: 'r2', user_id: 'user-megan',  reaction_type: 'heart' },
-      { id: 'r3', user_id: 'user-sara',   reaction_type: 'heart' },
-      { id: 'r4', user_id: 'user-kim',    reaction_type: 'heart' },
-    ],
-    comment_count: 1,
-  },
-  {
-    id: 'post-002', huddle_id: 'huddle-001', author_id: 'user-ashley',
-    body: "Wanted to snap during a stressful moment — didn't. I paused, breathed, and chose a softer answer. I'm proud of that.",
-    letters: ['R', 'G'], word_snapshot: 'GRACE',
-    meanings_snapshot: { G: 'Grateful', R: 'Rant', A: 'Aha', C: 'Challenge', E: 'Educate' },
-    photo_url: null,
-    created_at: new Date(Date.now() - 3600000 * 26).toISOString(),
-    author: { username: 'Ashley', avatar_url: null },
-    reactions: Array(9).fill(null).map((_, i) => ({ id: `r-a${i}`, user_id: `user-${i}`, reaction_type: 'heart' })),
-    comment_count: 2,
-  },
-  {
-    id: 'post-003', huddle_id: 'huddle-001', author_id: 'user-megan',
-    body: 'Texted a friend who\'s been quiet lately — nothing big, just "thinking of you." She replied right away. Sometimes encouragement is just showing up.',
-    letters: ['E'], word_snapshot: 'GRACE',
-    meanings_snapshot: { G: 'Grateful', R: 'Rant', A: 'Aha', C: 'Challenge', E: 'Educate' },
-    photo_url: null,
-    created_at: new Date(Date.now() - 3600000 * 72).toISOString(),
-    author: { username: 'Megan', avatar_url: null },
-    reactions: Array(6).fill(null).map((_, i) => ({ id: `r-m${i}`, user_id: `user-${i}`, reaction_type: 'heart' })),
-    comment_count: 0,
-  },
-  {
-    id: 'post-004', huddle_id: 'huddle-001', author_id: 'user-sara',
-    body: 'Finally said the thing I\'ve been sitting on for weeks. It landed better than I expected. Turns out people can handle honesty when it comes with kindness.',
-    letters: ['C', 'A'], word_snapshot: 'GRACE',
-    meanings_snapshot: { G: 'Grateful', R: 'Rant', A: 'Aha', C: 'Challenge', E: 'Educate' },
-    photo_url: null,
-    created_at: new Date(Date.now() - 3600000 * 120).toISOString(),
-    author: { username: 'Sara', avatar_url: null },
-    reactions: Array(11).fill(null).map((_, i) => ({ id: `r-s${i}`, user_id: `user-${i}`, reaction_type: 'heart' })),
-    comment_count: 3,
-  },
-];
 
 // ─────────────────────────────────────────
 // Tabs
@@ -110,36 +35,66 @@ export default function HuddlePage({ session }) {
   const currentUserId = session?.user?.id;
 
   const [activeTab,       setActiveTab]       = useState(TABS.FEED);
-  const [huddle,          setHuddle]          = useState(MOCK_HUDDLE);   // eslint-disable-line no-unused-vars
-  const [activeWord,      setActiveWord]      = useState(MOCK_WORD);     // eslint-disable-line no-unused-vars
-  const [posts,           setPosts]           = useState(MOCK_POSTS);
-  const [selectedLetters, setSelectedLetters] = useState([]); // multi-select
+  const [huddle,          setHuddle]          = useState(null);
+  const [activeWord,      setActiveWord]      = useState(null);
+  const [posts,           setPosts]           = useState([]);
+  const [loading,         setLoading]         = useState(true);
+  const [selectedLetters, setSelectedLetters] = useState([]);
   const [composerOpen,    setComposerOpen]    = useState(false);
   const [composerLetters, setComposerLetters] = useState([]);
   const [inviteCopied,    setInviteCopied]    = useState(false);
 
-  // ── Real Supabase fetch stub ────────────
+  // ── Real Supabase fetch ─────────────────
   useEffect(() => {
-    /*
+    if (!currentUserId) return;
+
     async function load() {
+      setLoading(true);
+
+      // 1. Get huddle membership
       const { data: membership } = await supabase
-        .from('huddle_members').select('huddle_id').eq('user_id', currentUserId).single();
-      if (!membership) return;
+        .from('huddle_members')
+        .select('huddle_id')
+        .eq('user_id', currentUserId)
+        .single();
+
+      if (!membership) {
+        setLoading(false);
+        return;
+      }
+
+      // 2. Load huddle details
       const { data: huddleData } = await supabase
-        .from('huddles').select('*').eq('id', membership.huddle_id).single();
-      setHuddle(huddleData);
+        .from('huddles')
+        .select('*')
+        .eq('id', membership.huddle_id)
+        .single();
+
+      if (huddleData) setHuddle(huddleData);
+
+      // 3. Load active word
       const { data: wordData } = await supabase
-        .from('huddle_words').select('*').eq('huddle_id', membership.huddle_id).eq('is_active', true).single();
+        .from('huddle_words')
+        .select('*')
+        .eq('huddle_id', membership.huddle_id)
+        .eq('is_active', true)
+        .single();
+
       if (wordData) setActiveWord(wordData);
+
+      // 4. Load posts with author, reactions, comment count
       const { data: postsData } = await supabase
         .from('posts')
         .select('*, author:profiles(username, avatar_url), reactions(*), comment_count:comments(count)')
         .eq('huddle_id', membership.huddle_id)
         .order('created_at', { ascending: false });
+
       if (postsData) setPosts(postsData);
+
+      setLoading(false);
     }
+
     load();
-    */
   }, [currentUserId]);
 
   // ── Toggle a letter — single select only ──
@@ -185,6 +140,27 @@ export default function HuddlePage({ session }) {
   // ─────────────────────────────────────────
   // Render
   // ─────────────────────────────────────────
+
+  if (loading) {
+    return (
+      <div className="app-loading">
+        <div className="loading-spinner" />
+        <p className="loading-text">Loading your huddle…</p>
+      </div>
+    );
+  }
+
+  if (!huddle) {
+    return (
+      <div className="app-loading">
+        <p className="loading-text">You're not in a huddle yet.</p>
+        <button onClick={signOut} style={{ marginTop: 16, color: '#7b6aad', fontSize: 14 }}>
+          Sign out
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="huddle-page">
 
