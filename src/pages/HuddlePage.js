@@ -14,6 +14,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase, signOut } from '../lib/supabaseClient';
 import PostComposer           from '../components/PostComposer';
 import PostCard               from '../components/PostCard';
+import CreateHuddle           from '../components/CreateHuddle';
 import HuddleLogo             from '../assets/Huddle_Logo_Subject.png';
 
 
@@ -31,20 +32,21 @@ const LETTER_PROMPTS = {
   E: 'Today I learned… or did you teach someone?',
 };
 
-export default function HuddlePage({ session }) {
+export default function HuddlePage({ session, isFounder }) {
   const currentUserId = session?.user?.id;
 
-  const [activeTab,       setActiveTab]       = useState(TABS.FEED);
-  const [huddle,          setHuddle]          = useState(null);
-  const [activeWord,      setActiveWord]      = useState(null);
-  const [posts,           setPosts]           = useState([]);
-  const [loading,         setLoading]         = useState(true);
-  const [members,         setMembers]         = useState([]);
-  const [membersOpen,     setMembersOpen]     = useState(false);
-  const [selectedLetters, setSelectedLetters] = useState([]);
-  const [composerOpen,    setComposerOpen]    = useState(false);
-  const [composerLetters, setComposerLetters] = useState([]);
-  const [inviteCopied,    setInviteCopied]    = useState(false);
+  const [activeTab,         setActiveTab]         = useState(TABS.FEED);
+  const [huddle,            setHuddle]            = useState(null);
+  const [activeWord,        setActiveWord]        = useState(null);
+  const [posts,             setPosts]             = useState([]);
+  const [loading,           setLoading]           = useState(true);
+  const [members,           setMembers]           = useState([]);
+  const [membersOpen,       setMembersOpen]       = useState(false);
+  const [selectedLetters,   setSelectedLetters]   = useState([]);
+  const [composerOpen,      setComposerOpen]      = useState(false);
+  const [composerLetters,   setComposerLetters]   = useState([]);
+  const [inviteCopied,      setInviteCopied]      = useState(false);
+  const [createHuddleOpen,  setCreateHuddleOpen]  = useState(false);
 
   // ── Real Supabase fetch ─────────────────
   useEffect(() => {
@@ -170,7 +172,27 @@ export default function HuddlePage({ session }) {
   if (!huddle) {
     return (
       <div className="app-loading">
-        <p className="loading-text">You're not in a huddle yet.</p>
+        {isFounder ? (
+          <>
+            <p className="loading-text">You don't have a Huddle yet.</p>
+            <button
+              className="login-btn"
+              style={{ marginTop: 16, maxWidth: 240 }}
+              onClick={() => setCreateHuddleOpen(true)}
+            >
+              Create a Huddle
+            </button>
+            {createHuddleOpen && (
+              <CreateHuddle
+                session={session}
+                onHuddleCreated={() => window.location.reload()}
+                onCancel={() => setCreateHuddleOpen(false)}
+              />
+            )}
+          </>
+        ) : (
+          <p className="loading-text">You're not in a Huddle yet.</p>
+        )}
         <button onClick={signOut} style={{ marginTop: 16, color: '#7b6aad', fontSize: 14 }}>
           Sign out
         </button>
@@ -320,13 +342,29 @@ export default function HuddlePage({ session }) {
             </div>
 
             <div className="huddle-view-actions">
+              {isFounder && (
+                <button
+                  className="huddle-view-invite-btn"
+                  onClick={() => setCreateHuddleOpen(true)}
+                >
+                  ✦ Create a new Huddle
+                </button>
+              )}
               <button className="huddle-view-invite-btn" onClick={handleCopyInvite}>
-                {inviteCopied ? '✓ Invite link copied' : '🔗 Copy invite link'}
+                {inviteCopied ? '✓ Invite code copied' : '🔗 Copy invite code'}
               </button>
               <button className="huddle-view-signout-btn" onClick={signOut}>
                 Sign out
               </button>
             </div>
+
+            {createHuddleOpen && (
+              <CreateHuddle
+                session={session}
+                onHuddleCreated={() => window.location.reload()}
+                onCancel={() => setCreateHuddleOpen(false)}
+              />
+            )}
           </div>
         )}
 

@@ -638,7 +638,7 @@ img { max-width: 100%; display: block; }
   margin-left: var(--s6); display: flex; gap: var(--s2);
 }
 
-.comment-reply-input, .comment-new-input {
+.comment-reply-input, .comment-new-input, .comment-input {
   flex: 1; background: var(--surface-2);
   border: 1px solid var(--border-dark); border-radius: var(--r-full);
   color: var(--ink); padding: var(--s2) var(--s4);
@@ -646,9 +646,11 @@ img { max-width: 100%; display: block; }
   transition: border-color 0.2s;
 }
 .comment-reply-input:focus,
-.comment-new-input:focus { border-color: var(--teal); }
+.comment-new-input:focus,
+.comment-input:focus { border-color: var(--teal); }
 .comment-reply-input::placeholder,
-.comment-new-input::placeholder { color: var(--ink-faint); font-style: italic; }
+.comment-new-input::placeholder,
+.comment-input::placeholder { color: var(--ink-faint); font-style: italic; }
 
 .comment-reply-send, .comment-new-send {
   background: var(--teal-dim); border: 1px solid var(--teal);
@@ -1069,4 +1071,169 @@ img { max-width: 100%; display: block; }
 .huddle-member-name {
   font-size: 14px;
   color: var(--ink);
+}
+
+/* comment-submit-btn and comment forms (new CommentThread classes) */
+.comment-submit-btn {
+  background: var(--teal-dim); border: 1px solid var(--teal);
+  color: var(--teal-dark); border-radius: var(--r-full);
+  padding: var(--s2) var(--s4); font-size: 16px;
+  font-weight: 700; min-height: 44px; min-width: 44px; flex-shrink: 0;
+}
+.comment-submit-btn:disabled { opacity: 0.4; }
+.comment-submit-btn:active:not(:disabled) { background: var(--teal); color: var(--surface); }
+
+.comment-new-form, .comment-reply-form {
+  display: flex; gap: var(--s2); margin-top: var(--s2);
+}
+
+/* ─────────────────────────────────────────
+   Create Huddle Sheet
+   ───────────────────────────────────────── */
+.create-huddle-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.5);
+  display: flex; align-items: flex-end;
+}
+
+.create-huddle-sheet {
+  background: var(--surface);
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+  width: 100%; max-height: 90vh;
+  overflow-y: auto;
+  padding: var(--s6);
+}
+
+.create-huddle-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: var(--s5);
+}
+
+.create-huddle-title {
+  font-family: var(--heading); font-size: 18px;
+  font-weight: 700; color: var(--purple-dark);
+}
+
+.create-huddle-close {
+  background: none; border: none;
+  font-size: 20px; color: var(--ink-soft);
+  cursor: pointer; padding: var(--s1);
+}
+
+.create-huddle-step {
+  display: flex; flex-direction: column; gap: var(--s4);
+}
+
+.create-huddle-label {
+  font-size: 15px; font-weight: 600; color: var(--ink);
+}
+
+.create-huddle-input {
+  background: var(--surface-2);
+  border: 1.5px solid var(--border-mid);
+  border-radius: var(--r-md);
+  padding: var(--s3) var(--s4);
+  font-size: 16px; color: var(--ink);
+  outline: none; width: 100%;
+}
+.create-huddle-input:focus { border-color: var(--purple); }
+
+.create-huddle-word-input {
+  font-family: var(--heading); font-size: 24px;
+  font-weight: 700; letter-spacing: 0.2em;
+  text-align: center; text-transform: uppercase;
+}
+
+.create-huddle-hint {
+  font-size: 13px; color: var(--ink-soft); font-style: italic;
+}
+
+.create-huddle-meanings {
+  display: flex; flex-direction: column; gap: var(--s2);
+}
+
+.create-huddle-meaning-row {
+  display: flex; align-items: center; gap: var(--s3);
+}
+
+.create-huddle-letter {
+  font-family: var(--heading); font-size: 20px; font-weight: 700;
+  color: var(--purple); width: 28px; text-align: center; flex-shrink: 0;
+}
+
+.create-huddle-meaning-input {
+  flex: 1; background: var(--surface-2);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--r-md);
+  padding: var(--s2) var(--s3);
+  font-size: 15px; color: var(--ink); outline: none;
+}
+.create-huddle-meaning-input:focus { border-color: var(--purple); }
+
+.create-huddle-btn {
+  background: var(--purple); color: white;
+  border: none; border-radius: var(--r-md);
+  padding: var(--s3) var(--s5);
+  font-family: var(--heading); font-size: 15px;
+  font-weight: 700; min-height: 52px; width: 100%;
+  cursor: pointer;
+}
+.create-huddle-btn:disabled { opacity: 0.4; }
+.create-huddle-btn-secondary {
+  background: var(--surface-2);
+  color: var(--purple-dark);
+  border: 1.5px solid var(--border-mid);
+}
+
+.create-huddle-back {
+  background: none; border: none;
+  color: var(--ink-soft); font-size: 14px;
+  cursor: pointer; text-align: left;
+}
+
+.create-huddle-error {
+  color: var(--heart); font-size: 13px;
+}
+
+.create-huddle-done {
+  align-items: center; text-align: center;
+}
+
+.create-huddle-success-icon { font-size: 48px; }
+
+.create-huddle-success-title {
+  font-family: var(--heading); font-size: 20px;
+  font-weight: 700; color: var(--purple-dark);
+}
+
+.create-huddle-code {
+  font-family: var(--heading); font-size: 32px;
+  font-weight: 900; letter-spacing: 0.15em;
+  color: var(--purple); background: var(--purple-dim);
+  border: 2px dashed var(--purple);
+  border-radius: var(--r-md);
+  padding: var(--s4) var(--s6);
+  width: 100%;
+}
+
+/* landing page secondary button */
+.login-btn-secondary {
+  background: var(--surface-2);
+  border: 1.5px solid var(--border-mid);
+  border-radius: var(--r-md);
+  padding: var(--s3) var(--s5);
+  font-family: var(--heading); font-size: 15px;
+  font-weight: 600; color: var(--purple-dark);
+  min-height: 52px; width: 100%;
+  cursor: pointer;
+}
+
+.login-landing {
+  display: flex; flex-direction: column; gap: var(--s3); width: 100%;
+}
+
+.login-input-code {
+  font-family: var(--heading); font-size: 20px;
+  font-weight: 700; letter-spacing: 0.15em;
+  text-align: center; text-transform: uppercase;
 }
