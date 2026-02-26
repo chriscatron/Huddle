@@ -65,6 +65,9 @@ export default function App() {
 
   function handleNameSaved() {
     setNeedsName(false);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession({ ...session });
+    });
   }
 
   if (loading) {
