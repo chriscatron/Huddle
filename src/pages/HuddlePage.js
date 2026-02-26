@@ -10,7 +10,7 @@
 //   Bottom tab bar (Feed · Share · Huddle)
 // ============================================================
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase, signOut } from '../lib/supabaseClient';
 import PostComposer           from '../components/PostComposer';
 import PostCard               from '../components/PostCard';
@@ -47,6 +47,8 @@ export default function HuddlePage({ session, isFounder }) {
   const [composerLetters,   setComposerLetters]   = useState([]);
   const [inviteCopied,      setInviteCopied]      = useState(false);
   const [createHuddleOpen,  setCreateHuddleOpen]  = useState(false);
+  const [newPostCount,      setNewPostCount]       = useState(0);
+  const huddleIdRef = useRef(null);
 
   // ── Real Supabase fetch ─────────────────
   useEffect(() => {
@@ -110,17 +112,66 @@ export default function HuddlePage({ session, isFounder }) {
       console.log('[Huddle] members:', membersData, membersError);
       if (membersData) setMembers(membersData);
 
+      huddleIdRef.current = membership.huddle_id;
       setLoading(false);
     }
 
     load();
-  }, [currentUserId]);
+
+    // Real-time subscription for new posts
+    let channel;
+    const setupChannel = () => {
+      if (!huddleIdRef.current) return;
+      channel = supabase
+        .channel('posts-realtime')
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'posts',
+          filter: `huddle_id=eq.${huddleIdRef.current}`,
+        }, async (payload) => {
+          // Fetch full post with author and reactions
+          const { data } = await supabase
+            .from('posts')
+            .select('*, author:profiles(username, avatar_url), reactions(*), comments(count)')
+            .eq('id', payload.new.id)
+            .single();
+
+          if (data) {
+            data.comment_count = data.comments?.[0]?.count ?? 0;
+            delete data.comments;
+
+            // Only add if not our own post (we already added it optimistically)
+            if (data.author_id !== currentUserId) {
+              setPosts(prev => {
+                // Avoid duplicates
+                if (prev.some(p => p.id === data.id)) return prev;
+                setNewPostCount(c => c + 1);
+                return [data, ...prev];
+              });
+            }
+          }
+        })
+        .subscribe();
+    };
+
+    // Wait for load to set huddleId then subscribe
+    setTimeout(setupChannel, 2000);
+
+    return () => {
+      if (channel) supabase.removeChannel(channel);
+    };
 
   // ── Toggle a letter — single select only ──
   function toggleLetter(letter) {
     setSelectedLetters(prev =>
       prev.includes(letter) ? [] : [letter]
     );
+  }
+
+  function switchToFeed() {
+    setActiveTab(TABS.FEED);
+    setNewPostCount(0);
   }
 
   // ── Filtered posts ──────────────────────
@@ -217,7 +268,7 @@ export default function HuddlePage({ session, isFounder }) {
             <p className="huddle-header-sub">A simple way to stay close, even on ordinary days.</p>
           </div>
         </div>
-        <button className="huddle-signout-btn" onClick={signOut} title="Sign out">↩</button>
+        <button className="huddle-signout-btn" style={{visibility:'hidden'}} title="">↩</button>
       </header>
 
       {/* ══ Sticky Word Bar ══════════════════ */}
@@ -374,9 +425,14 @@ export default function HuddlePage({ session, isFounder }) {
       <nav className="tab-bar">
         <button
           className={`tab-btn ${activeTab === TABS.FEED ? 'active' : ''}`}
-          onClick={() => setActiveTab(TABS.FEED)}
+          onClick={switchToFeed}
         >
-          <span className="tab-icon">📜</span>
+          <span className="tab-icon" style={{position:'relative'}}>
+            📜
+            {newPostCount > 0 && (
+              <span className="tab-badge">{newPostCount}</span>
+            )}
+          </span>
           <span className="tab-label">Feed</span>
         </button>
 

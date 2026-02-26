@@ -1287,3 +1287,20 @@ img { max-width: 100%; display: block; }
 .login-welcome-icon {
   font-size: 16px;
 }
+
+/* ─────────────────────────────────────────
+   Tab Badge (new post notification)
+   ───────────────────────────────────────── */
+.tab-badge {
+  position: absolute;
+  top: -6px; right: -8px;
+  background: #e53e3e;
+  color: white;
+  font-size: 10px; font-weight: 700;
+  font-family: var(--heading);
+  min-width: 16px; height: 16px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 4px;
+  line-height: 1;
+}
