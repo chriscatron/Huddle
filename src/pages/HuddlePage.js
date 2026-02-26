@@ -55,65 +55,69 @@ export default function HuddlePage({ session, isFounder }) {
     if (!currentUserId) return;
 
     async function load() {
-      setLoading(true);
+      try {
+        setLoading(true);
 
-      // 1. Get huddle membership
-      const { data: membership } = await supabase
-        .from('huddle_members')
-        .select('huddle_id')
-        .eq('user_id', currentUserId)
-        .single();
+        // 1. Get huddle membership
+        const { data: membership } = await supabase
+          .from('huddle_members')
+          .select('huddle_id')
+          .eq('user_id', currentUserId)
+          .single();
 
-      if (!membership) {
+        if (!membership) {
+          setLoading(false);
+          return;
+        }
+
+        // 2. Load huddle details
+        const { data: huddleData } = await supabase
+          .from('huddles')
+          .select('*')
+          .eq('id', membership.huddle_id)
+          .single();
+
+        if (huddleData) setHuddle(huddleData);
+
+        // 3. Load active word
+        const { data: wordData } = await supabase
+          .from('huddle_words')
+          .select('*')
+          .eq('huddle_id', membership.huddle_id)
+          .eq('is_active', true)
+          .single();
+
+        if (wordData) setActiveWord(wordData);
+
+        // 4. Load posts with author, reactions, comment count
+        const { data: postsData } = await supabase
+          .from('posts')
+          .select('*, author:profiles(username, avatar_url), reactions(*), comments(count)')
+          .eq('huddle_id', membership.huddle_id)
+          .order('created_at', { ascending: false });
+
+        if (postsData) {
+          postsData.forEach(p => {
+            p.comment_count = p.comments?.[0]?.count ?? 0;
+            delete p.comments;
+          });
+          setPosts(postsData);
+        }
+
+        huddleIdRef.current = membership.huddle_id;
         setLoading(false);
-        return;
+
+        // 5. Load members (non-blocking)
+        supabase
+          .rpc('get_huddle_members', { p_huddle_id: membership.huddle_id })
+          .then(({ data: membersData }) => {
+            if (membersData) setMembers(membersData);
+          });
+
+      } catch (err) {
+        console.error('[Huddle] load error:', err);
+        setLoading(false);
       }
-
-      // 2. Load huddle details
-      const { data: huddleData } = await supabase
-        .from('huddles')
-        .select('*')
-        .eq('id', membership.huddle_id)
-        .single();
-
-      if (huddleData) setHuddle(huddleData);
-
-      // 3. Load active word
-      const { data: wordData } = await supabase
-        .from('huddle_words')
-        .select('*')
-        .eq('huddle_id', membership.huddle_id)
-        .eq('is_active', true)
-        .single();
-
-      if (wordData) setActiveWord(wordData);
-
-      // 4. Load posts with author, reactions, comment count
-      const { data: postsData } = await supabase
-        .from('posts')
-        .select('*, author:profiles(username, avatar_url), reactions(*), comments(count)')
-        .eq('huddle_id', membership.huddle_id)
-        .order('created_at', { ascending: false });
-
-      // Normalize comment count from [{count: n}] to n
-      if (postsData) {
-        postsData.forEach(p => {
-          p.comment_count = p.comments?.[0]?.count ?? 0;
-          delete p.comments;
-        });
-      }
-
-      if (postsData) setPosts(postsData);
-
-      huddleIdRef.current = membership.huddle_id;
-      setLoading(false);
-
-      // 5. Load members (non-blocking — don't let this hang the page)
-      supabase
-        .rpc('get_huddle_members', { p_huddle_id: membership.huddle_id })
-        .then(({ data: membersData }) => {
-          if (membersData) setMembers(membersData);
-        });
     }
 
     load();
