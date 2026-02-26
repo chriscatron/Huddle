@@ -1,4 +1,4 @@
-\// ============================================================
+// ============================================================
 // src/pages/HuddlePage.js
 // ─────────────────────────────────────────────────────────────
 // Single-scroll mobile layout. No panels, no columns.
@@ -102,9 +102,10 @@ export default function HuddlePage({ session }) {
       if (postsData) setPosts(postsData);
 
       // 5. Load members
-      const { data: membersData } = await supabase
+      const { data: membersData, error: membersError } = await supabase
         .rpc('get_huddle_members', { p_huddle_id: membership.huddle_id });
 
+      console.log('[Huddle] members:', membersData, membersError);
       if (membersData) setMembers(membersData);
 
       setLoading(false);
@@ -280,22 +281,13 @@ export default function HuddlePage({ session }) {
             <h2 className="huddle-view-name">Some days it's gratitude. Some days it's honesty. Some days it's a lesson learned.</h2>
             <p className="huddle-view-sub">Pop in, share a thought, keep going.</p>
 
-            <div className="huddle-view-word">
-              <p className="huddle-view-word-label">{activeWord?.word}</p>
-              {letters.map(letter => (
-                <div key={letter} className="huddle-view-meaning-row">
-                  <span className="huddle-view-letter">{letter}</span>
-                  <span className="huddle-view-meaning">{letterMeanings[letter]}</span>
-                </div>
-              ))}
-            </div>
-
-            <div className="huddle-view-actions">
+            {/* Members — shown first */}
+            <div className="huddle-view-members">
               <button
                 className="huddle-view-members-btn"
                 onClick={() => setMembersOpen(o => !o)}
               >
-                👥 {members.length} {members.length === 1 ? 'member' : 'members'}
+                👥 {members.length} {members.length === 1 ? 'member' : 'members'} {membersOpen ? '▲' : '▼'}
               </button>
 
               {membersOpen && (
@@ -312,7 +304,22 @@ export default function HuddlePage({ session }) {
                   })}
                 </div>
               )}
+            </div>
 
+            {/* Word — compact */}
+            <div className="huddle-view-word">
+              <p className="huddle-view-word-label">{activeWord?.word}</p>
+              <div className="huddle-view-meanings-compact">
+                {letters.map(letter => (
+                  <div key={letter} className="huddle-view-meaning-row">
+                    <span className="huddle-view-letter">{letter}</span>
+                    <span className="huddle-view-meaning">{letterMeanings[letter]}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="huddle-view-actions">
               <button className="huddle-view-invite-btn" onClick={handleCopyInvite}>
                 {inviteCopied ? '✓ Invite link copied' : '🔗 Copy invite link'}
               </button>
