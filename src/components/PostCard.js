@@ -14,7 +14,7 @@
 // ============================================================
 
 import React, { useState } from 'react';
-// import { supabase } from '../lib/supabaseClient'; // uncomment when connecting
+import { supabase } from '../lib/supabaseClient';
 import CommentThread from './CommentThread';
 
 // ─────────────────────────────────────────
@@ -54,23 +54,15 @@ export default function PostCard({ post, currentUserId, letterMeanings = {} }) {
       setReactions(prev => prev.filter(
         r => !(r.user_id === currentUserId && r.reaction_type === 'heart')
       ));
-
-      // ── Real Supabase delete ──────────────
-      // Uncomment when connected:
-      /*
       await supabase
         .from('reactions')
         .delete()
         .match({ post_id: post.id, user_id: currentUserId, reaction_type: 'heart' });
-      */
     } else {
       // Optimistic add
       const optimistic = { id: `opt-${Date.now()}`, user_id: currentUserId, reaction_type: 'heart' };
       setReactions(prev => [...prev, optimistic]);
 
-      // ── Real Supabase insert ──────────────
-      // Uncomment when connected:
-      /*
       const { data, error } = await supabase
         .from('reactions')
         .insert({ post_id: post.id, user_id: currentUserId, reaction_type: 'heart' })
@@ -78,13 +70,10 @@ export default function PostCard({ post, currentUserId, letterMeanings = {} }) {
         .single();
 
       if (!error) {
-        // Replace optimistic with real row
         setReactions(prev => prev.map(r => r.id === optimistic.id ? data : r));
       } else {
-        // Rollback on error
         setReactions(prev => prev.filter(r => r.id !== optimistic.id));
       }
-      */
     }
   }
 

@@ -1,4 +1,4 @@
-// ============================================================
+\// ============================================================
 // src/pages/HuddlePage.js
 // ─────────────────────────────────────────────────────────────
 // Single-scroll mobile layout. No panels, no columns.
@@ -103,11 +103,9 @@ export default function HuddlePage({ session }) {
 
       // 5. Load members
       const { data: membersData } = await supabase
-        .from('huddle_members')
-        .select('user_id, profiles(username, avatar_url)')
-        .eq('huddle_id', membership.huddle_id);
+        .rpc('get_huddle_members', { p_huddle_id: membership.huddle_id });
 
-      if (membersData) setMembers(membersData.map(m => m.profiles));
+      if (membersData) setMembers(membersData);
 
       setLoading(false);
     }
