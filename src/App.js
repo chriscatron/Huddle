@@ -11,11 +11,11 @@
 // ============================================================
 
 import React, { useState, useEffect, useRef } from 'react';
-import { supabase, signOut } from '../lib/supabaseClient';
-import PostComposer           from '../components/PostComposer';
-import PostCard               from '../components/PostCard';
-import CreateHuddle           from '../components/CreateHuddle';
-import HuddleLogo             from '../assets/Huddle_Logo_Subject.png';
+import { supabase, signOut } from './lib/supabaseClient';
+import PostComposer           from './components/PostComposer';
+import PostCard               from './components/PostCard';
+import CreateHuddle           from './components/CreateHuddle';
+import HuddleLogo             from './assets/Huddle_Logo_Subject.png';
 
 
 // ─────────────────────────────────────────
