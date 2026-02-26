@@ -105,15 +105,15 @@ export default function HuddlePage({ session, isFounder }) {
 
       if (postsData) setPosts(postsData);
 
-      // 5. Load members
-      const { data: membersData, error: membersError } = await supabase
-        .rpc('get_huddle_members', { p_huddle_id: membership.huddle_id });
-
-      console.log('[Huddle] members:', membersData, membersError);
-      if (membersData) setMembers(membersData);
-
       huddleIdRef.current = membership.huddle_id;
       setLoading(false);
+
+      // 5. Load members (non-blocking — don't let this hang the page)
+      supabase
+        .rpc('get_huddle_members', { p_huddle_id: membership.huddle_id })
+        .then(({ data: membersData }) => {
+          if (membersData) setMembers(membersData);
+        });
     }
 
     load();
@@ -161,6 +161,8 @@ export default function HuddlePage({ session, isFounder }) {
     return () => {
       if (channel) supabase.removeChannel(channel);
     };
+
+  }, [currentUserId]);
 
   // ── Toggle a letter — single select only ──
   function toggleLetter(letter) {
