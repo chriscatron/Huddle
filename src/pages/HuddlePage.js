@@ -85,9 +85,17 @@ export default function HuddlePage({ session }) {
       // 4. Load posts with author, reactions, comment count
       const { data: postsData } = await supabase
         .from('posts')
-        .select('*, author:profiles(username, avatar_url), reactions(*), comment_count:comments(count)')
+        .select('*, author:profiles(username, avatar_url), reactions(*), comments(count)')
         .eq('huddle_id', membership.huddle_id)
         .order('created_at', { ascending: false });
+
+      // Normalize comment count from [{count: n}] to n
+      if (postsData) {
+        postsData.forEach(p => {
+          p.comment_count = p.comments?.[0]?.count ?? 0;
+          delete p.comments;
+        });
+      }
 
       if (postsData) setPosts(postsData);
 
