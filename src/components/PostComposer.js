@@ -18,7 +18,7 @@
 // ============================================================
 
 import React, { useState, useEffect, useRef } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import { supabase } from '../../lib/supabaseClient';
 
 const LETTER_PROMPTS = {
   G: 'Especially thankful for something today?',
