@@ -10,12 +10,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
 export default function CommentThread({ postId, currentUserId, onCountChange }) {
-  const [comments,   setComments]   = useState([]);
-  const [loading,    setLoading]    = useState(true);
-  const [replyingTo, setReplyingTo] = useState(null);
-  const [newComment, setNewComment] = useState('');
-  const [replyText,  setReplyText]  = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  const [comments,    setComments]    = useState([]);
+  const [loading,     setLoading]     = useState(true);
+  const [replyingTo,  setReplyingTo]  = useState(null);
+  const [newComment,  setNewComment]  = useState('');
+  const [replyText,   setReplyText]   = useState('');
+  const [submitting,  setSubmitting]  = useState(false);
+  const [showInput,   setShowInput]   = useState(false);
 
   const commentInputRef = useRef(null);
 
@@ -183,24 +184,34 @@ export default function CommentThread({ postId, currentUserId, onCountChange }) 
         ))
       )}
 
-      {/* New comment input */}
-      <form className="comment-new-form" onSubmit={handleCommentSubmit}>
-        <input
-          ref={commentInputRef}
-          className="comment-input"
-          placeholder="Add a comment…"
-          value={newComment}
-          onChange={e => setNewComment(e.target.value)}
-          disabled={submitting}
-        />
+      {/* Add comment — tap to reveal input */}
+      {showInput ? (
+        <form className="comment-new-form" onSubmit={handleCommentSubmit}>
+          <input
+            ref={commentInputRef}
+            className="comment-input"
+            placeholder="Add a comment…"
+            value={newComment}
+            onChange={e => setNewComment(e.target.value)}
+            disabled={submitting}
+            autoFocus
+          />
+          <button
+            type="submit"
+            className="comment-submit-btn"
+            disabled={submitting || !newComment.trim()}
+          >
+            {submitting ? '…' : '↑'}
+          </button>
+        </form>
+      ) : (
         <button
-          type="submit"
-          className="comment-submit-btn"
-          disabled={submitting || !newComment.trim()}
+          className="comment-add-btn"
+          onClick={() => setShowInput(true)}
         >
-          {submitting ? '…' : '↑'}
+          + Add a comment
         </button>
-      </form>
+      )}
     </div>
   );
 }

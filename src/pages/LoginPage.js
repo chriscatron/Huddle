@@ -11,12 +11,13 @@ import { supabase, sendOtpCode, verifyOtpCode } from '../lib/supabaseClient';
 import HuddleLogo from '../assets/Huddle_Logo_Subject.png';
 
 const STEPS = {
-  LANDING:      'landing',      // choose: have code or returning
-  INVITE_CODE:  'invite_code',  // enter invite code
-  INVITE_NAME:  'invite_name',  // what's your name?
-  INVITE_EMAIL: 'invite_email', // email for new user
-  EMAIL:        'email',        // returning user email
-  CODE:         'code',         // OTP code entry
+  LANDING:      'landing',
+  WELCOME:      'welcome',      // PWA install instructions for new users
+  INVITE_CODE:  'invite_code',
+  INVITE_NAME:  'invite_name',
+  INVITE_EMAIL: 'invite_email',
+  EMAIL:        'email',
+  CODE:         'code',
 };
 
 export default function LoginPage() {
@@ -187,11 +188,51 @@ export default function LoginPage() {
         {/* ── Landing ── */}
         {step === STEPS.LANDING && (
           <div className="login-landing">
-            <button className="login-btn" onClick={() => setStep(STEPS.INVITE_CODE)}>
+            <button className="login-btn" onClick={() => setStep(STEPS.WELCOME)}>
               I have an invite code
             </button>
             <button className="login-btn-secondary" onClick={() => setStep(STEPS.EMAIL)}>
               Sign in
+            </button>
+          </div>
+        )}
+
+        {/* ── Welcome / PWA instructions ── */}
+        {step === STEPS.WELCOME && (
+          <div className="login-welcome">
+            <h2 className="login-welcome-title">Before you dive in</h2>
+            <p className="login-welcome-intro">For the best experience, add Huddle to your home screen:</p>
+            <ol className="login-welcome-steps">
+              <li>
+                <span className="login-welcome-num">1</span>
+                <span>Make sure you're in <strong>Safari</strong> on your iPhone</span>
+              </li>
+              <li>
+                <span className="login-welcome-num">2</span>
+                <span>Tap the <strong>Share button</strong> <span className="login-welcome-icon">⎋</span> at the bottom of the screen</span>
+              </li>
+              <li>
+                <span className="login-welcome-num">3</span>
+                <span>Scroll down and tap <strong>"Add to Home Screen"</strong></span>
+              </li>
+              <li>
+                <span className="login-welcome-num">4</span>
+                <span>Tap <strong>Add</strong> in the top right</span>
+              </li>
+              <li>
+                <span className="login-welcome-num">5</span>
+                <span><strong>Close Safari</strong> and open Huddle from your home screen</span>
+              </li>
+              <li>
+                <span className="login-welcome-num">6</span>
+                <span>Come back here and tap <strong>"I have an invite code"</strong></span>
+              </li>
+            </ol>
+            <button className="login-btn" onClick={() => setStep(STEPS.INVITE_CODE)}>
+              I've added it — continue
+            </button>
+            <button className="login-resend-btn" onClick={() => setStep(STEPS.INVITE_CODE)}>
+              Skip this, I'll do it later
             </button>
           </div>
         )}
