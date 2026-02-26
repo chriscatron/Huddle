@@ -39,6 +39,8 @@ export default function HuddlePage({ session }) {
   const [activeWord,      setActiveWord]      = useState(null);
   const [posts,           setPosts]           = useState([]);
   const [loading,         setLoading]         = useState(true);
+  const [members,         setMembers]         = useState([]);
+  const [membersOpen,     setMembersOpen]     = useState(false);
   const [selectedLetters, setSelectedLetters] = useState([]);
   const [composerOpen,    setComposerOpen]    = useState(false);
   const [composerLetters, setComposerLetters] = useState([]);
@@ -98,6 +100,14 @@ export default function HuddlePage({ session }) {
       }
 
       if (postsData) setPosts(postsData);
+
+      // 5. Load members
+      const { data: membersData } = await supabase
+        .from('huddle_members')
+        .select('user_id, profiles(username, avatar_url)')
+        .eq('huddle_id', membership.huddle_id);
+
+      if (membersData) setMembers(membersData.map(m => m.profiles));
 
       setLoading(false);
     }
@@ -283,6 +293,28 @@ export default function HuddlePage({ session }) {
             </div>
 
             <div className="huddle-view-actions">
+              <button
+                className="huddle-view-members-btn"
+                onClick={() => setMembersOpen(o => !o)}
+              >
+                👥 {members.length} {members.length === 1 ? 'member' : 'members'}
+              </button>
+
+              {membersOpen && (
+                <div className="huddle-members-list">
+                  {members.map((m, i) => {
+                    const name = m?.username || '?';
+                    const initials = name.slice(0, 2).toUpperCase();
+                    return (
+                      <div key={i} className="huddle-member-row">
+                        <div className="huddle-member-avatar">{initials}</div>
+                        <span className="huddle-member-name">{name}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
               <button className="huddle-view-invite-btn" onClick={handleCopyInvite}>
                 {inviteCopied ? '✓ Invite link copied' : '🔗 Copy invite link'}
               </button>

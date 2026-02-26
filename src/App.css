@@ -1012,3 +1012,53 @@ img { max-width: 100%; display: block; }
   font-size: 13px;
 }
 .login-otp-divider { color: var(--ink-faint); }
+
+/* ─────────────────────────────────────────
+   Members List
+   ───────────────────────────────────────── */
+.huddle-view-members-btn {
+  background: var(--surface-2);
+  border: 1.5px solid var(--border-mid);
+  border-radius: var(--r-md);
+  padding: var(--s2) var(--s4);
+  font-size: 14px;
+  color: var(--purple-dark);
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+}
+
+.huddle-members-list {
+  background: var(--surface);
+  border: 1.5px solid var(--border-mid);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  width: 100%;
+}
+
+.huddle-member-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s2) var(--s4);
+  border-bottom: 1px solid var(--border-faint);
+}
+.huddle-member-row:last-child { border-bottom: none; }
+
+.huddle-member-avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--purple);
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.huddle-member-name {
+  font-size: 14px;
+  color: var(--ink);
+}
