@@ -7,7 +7,7 @@
 // ============================================================
 
 import React, { useState, useEffect, useRef } from 'react';
-import { supabase } from '../../lib/supabaseClient';
+import { supabase } from '../lib/supabaseClient';
 
 export default function CommentThread({ postId, currentUserId, onCountChange }) {
   const [comments,    setComments]    = useState([]);
