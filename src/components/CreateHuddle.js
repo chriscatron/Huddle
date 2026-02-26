@@ -18,8 +18,6 @@ const STEPS = {
   DONE:    'done',
 };
 
-const DEFAULT_MEANINGS = { A: '', B: '', C: '', D: '', E: '' };
-
 function generateCode(word) {
   const clean = word.replace(/[^A-Z]/g, '').toUpperCase().slice(0, 6);
   const num = Math.floor(10 + Math.random() * 90);
