@@ -147,8 +147,6 @@ export default function PostComposer({
     }
 
     // ── Real Supabase insert ──────────────────
-    // Uncomment this block when Supabase is connected:
-    /*
     const { data, error: insertError } = await supabase
       .from('posts')
       .insert({
@@ -170,26 +168,6 @@ export default function PostComposer({
     }
 
     if (onPostCreated) onPostCreated(data);
-    */
-    // ── END real insert ───────────────────────
-
-    // ── MOCK: simulate a successful post insert ──
-    const mockPost = {
-      id:                `mock-${Date.now()}`,
-      huddle_id:         huddleId,
-      author_id:         userId,
-      body:              body.trim(),
-      letters:           selectedLetters,
-      word_snapshot:     word,
-      meanings_snapshot: letterMeanings,
-      photo_url:         photoUrl || photoPreview,
-      created_at:        new Date().toISOString(),
-      author: { username: 'You', avatar_url: null },
-      reactions: [],
-      comment_count: 0,
-    };
-    if (onPostCreated) onPostCreated(mockPost);
-    // ── END mock ────────────────────────────────
 
     setSubmitting(false);
     onClose();
