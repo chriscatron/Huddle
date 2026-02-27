@@ -8,7 +8,7 @@
 //   3. Confirm → huddle created → show invite code
 // ============================================================
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
 const STEPS = {
@@ -32,6 +32,12 @@ export default function CreateHuddle({ session, onHuddleCreated, onCancel }) {
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState('');
   const [code,     setCode]     = useState('');
+
+  // Lock body scroll while overlay is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
 
   const letters = word.toUpperCase().replace(/[^A-Z]/g, '').split('').filter(Boolean);
   const uniqueLetters = [...new Set(letters)];
