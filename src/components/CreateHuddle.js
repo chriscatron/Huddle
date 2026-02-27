@@ -71,7 +71,7 @@ export default function CreateHuddle({ session, onHuddleCreated, onCancel }) {
     setLoading(true);
     setError('');
 
-    // Get fresh session to ensure valid auth token
+    // Get fresh session
     const { data: { session: freshSession } } = await supabase.auth.getSession();
     const userId = freshSession?.user?.id;
 
@@ -85,36 +85,20 @@ export default function CreateHuddle({ session, onHuddleCreated, onCancel }) {
     const letterMeanings = {};
     letterKeys.forEach(k => { letterMeanings[k] = meanings[k] || k; });
 
-    // Create huddle
-    const { data: huddle, error: huddleError } = await supabase
-      .from('huddles')
-      .insert({
-        name,
-        founder_id:   userId,
-        invite_token: inviteToken,
-      })
-      .select()
-      .single();
+    const { data: huddleId, error: huddleError } = await supabase
+      .rpc('create_huddle', {
+        p_name:            name,
+        p_invite_token:    inviteToken,
+        p_word:            word.toUpperCase(),
+        p_letter_meanings: letterMeanings,
+        p_user_id:         userId,
+      });
 
     if (huddleError) {
       setError(huddleError.message || 'Could not create huddle. Please try again.');
       setLoading(false);
       return;
     }
-
-    // Create active word
-    await supabase.from('huddle_words').insert({
-      huddle_id:       huddle.id,
-      word:            word.toUpperCase(),
-      letter_meanings: letterMeanings,
-      is_active:       true,
-    });
-
-    // Add founder as member
-    await supabase.from('huddle_members').insert({
-      huddle_id: huddle.id,
-      user_id:   userId,
-    });
 
     setCode(inviteToken);
     setLoading(false);
