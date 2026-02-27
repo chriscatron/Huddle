@@ -71,6 +71,16 @@ export default function CreateHuddle({ session, onHuddleCreated, onCancel }) {
     setLoading(true);
     setError('');
 
+    // Get fresh session to ensure valid auth token
+    const { data: { session: freshSession } } = await supabase.auth.getSession();
+    const userId = freshSession?.user?.id;
+
+    if (!userId) {
+      setError('Not logged in. Please sign out and sign back in.');
+      setLoading(false);
+      return;
+    }
+
     const inviteToken = generateCode(word);
     const letterMeanings = {};
     letterKeys.forEach(k => { letterMeanings[k] = meanings[k] || k; });
@@ -80,7 +90,7 @@ export default function CreateHuddle({ session, onHuddleCreated, onCancel }) {
       .from('huddles')
       .insert({
         name,
-        founder_id:   session.user.id,
+        founder_id:   userId,
         invite_token: inviteToken,
       })
       .select()
@@ -103,7 +113,7 @@ export default function CreateHuddle({ session, onHuddleCreated, onCancel }) {
     // Add founder as member
     await supabase.from('huddle_members').insert({
       huddle_id: huddle.id,
-      user_id:   session.user.id,
+      user_id:   userId,
     });
 
     setCode(inviteToken);
