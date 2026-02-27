@@ -96,8 +96,12 @@ export default function CreateHuddle({ session, onHuddleCreated, onCancel }) {
   }
 
   return (
-    <div className="create-huddle-overlay">
-      <div className="create-huddle-sheet">
+    <>
+      {/* Backdrop */}
+      <div className="composer-backdrop" onClick={onCancel} aria-hidden="true" />
+
+      {/* Sheet */}
+      <div className="composer-modal" role="dialog" aria-modal="true" aria-label="Create a Huddle">
         <div className="create-huddle-header">
           <h2 className="create-huddle-title">Create a Huddle</h2>
           <button className="create-huddle-close" onClick={onCancel}>✕</button>
@@ -197,6 +201,6 @@ export default function CreateHuddle({ session, onHuddleCreated, onCancel }) {
         )}
 
       </div>
-    </div>
+    </>
   );
 }
