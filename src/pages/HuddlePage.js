@@ -239,13 +239,6 @@ export default function HuddlePage({ session, isFounder }) {
             >
               Create a Huddle
             </button>
-            {createHuddleOpen && (
-              <CreateHuddle
-                session={session}
-                onHuddleCreated={() => window.location.reload()}
-                onCancel={() => setCreateHuddleOpen(false)}
-              />
-            )}
           </>
         ) : (
           <p className="loading-text">You're not in a Huddle yet.</p>
@@ -253,6 +246,13 @@ export default function HuddlePage({ session, isFounder }) {
         <button onClick={signOut} style={{ marginTop: 16, color: '#7b6aad', fontSize: 14 }}>
           Sign out
         </button>
+        {createHuddleOpen && (
+          <CreateHuddle
+            session={session}
+            onHuddleCreated={() => window.location.reload()}
+            onCancel={() => setCreateHuddleOpen(false)}
+          />
+        )}
       </div>
     );
   }
@@ -415,13 +415,6 @@ export default function HuddlePage({ session, isFounder }) {
               </button>
             </div>
 
-            {createHuddleOpen && (
-              <CreateHuddle
-                session={session}
-                onHuddleCreated={() => window.location.reload()}
-                onCancel={() => setCreateHuddleOpen(false)}
-              />
-            )}
           </div>
         )}
 
@@ -468,6 +461,15 @@ export default function HuddlePage({ session, isFounder }) {
         huddleId={huddle?.id}
         userId={currentUserId}
       />
+
+      {/* ══ Create Huddle ════════════════════ */}
+      {createHuddleOpen && (
+        <CreateHuddle
+          session={session}
+          onHuddleCreated={() => window.location.reload()}
+          onCancel={() => setCreateHuddleOpen(false)}
+        />
+      )}
     </div>
   );
 }
