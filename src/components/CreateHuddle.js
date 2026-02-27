@@ -39,15 +39,31 @@ export default function CreateHuddle({ session, onHuddleCreated, onCancel }) {
     return () => { document.body.style.overflow = ''; };
   }, []);
 
-  const letters = word.toUpperCase().replace(/[^A-Z]/g, '').split('').filter(Boolean);
-  const uniqueLetters = [...new Set(letters)];
+  // Build letter keys that handle duplicates: R, E, P, O, R2, T
+  const letterKeys = React.useMemo(() => {
+    const arr = word.toUpperCase().replace(/[^A-Z]/g, '').split('').filter(Boolean);
+    const counts = {};
+    const seen = {};
+    return arr.map(l => {
+      counts[l] = (counts[l] || 0) + 1;
+      if (counts[l] === 1) return l;
+      seen[l] = (seen[l] || 1) + 1;
+      return `${l}${seen[l]}`;
+    });
+  }, [word]);
 
   function handleWordChange(e) {
     const val = e.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 8);
     setWord(val);
-    // Init meanings for new letters
+    // Init meanings for new keys
     const newMeanings = { ...meanings };
-    val.split('').forEach(l => { if (!newMeanings[l]) newMeanings[l] = ''; });
+    const counts = {};
+    const seen = {};
+    val.split('').forEach(l => {
+      counts[l] = (counts[l] || 0) + 1;
+      const key = counts[l] === 1 ? l : `${l}${(seen[l] = (seen[l] || 1) + 1)}`;
+      if (!newMeanings[key]) newMeanings[key] = '';
+    });
     setMeanings(newMeanings);
   }
 
@@ -57,7 +73,7 @@ export default function CreateHuddle({ session, onHuddleCreated, onCancel }) {
 
     const inviteToken = generateCode(word);
     const letterMeanings = {};
-    uniqueLetters.forEach(l => { letterMeanings[l] = meanings[l] || l; });
+    letterKeys.forEach(k => { letterMeanings[k] = meanings[k] || k; });
 
     // Create huddle
     const { data: huddle, error: huddleError } = await supabase
@@ -71,7 +87,7 @@ export default function CreateHuddle({ session, onHuddleCreated, onCancel }) {
       .single();
 
     if (huddleError) {
-      setError('Could not create huddle. Please try again.');
+      setError(huddleError.message || 'Could not create huddle. Please try again.');
       setLoading(false);
       return;
     }
@@ -142,17 +158,17 @@ export default function CreateHuddle({ session, onHuddleCreated, onCancel }) {
             />
             <p className="create-huddle-hint">Each letter will be a reflection prompt for your members.</p>
 
-            {uniqueLetters.length > 0 && (
+            {letterKeys.length > 0 && (
               <div className="create-huddle-meanings">
-                {uniqueLetters.map(letter => (
-                  <div key={letter} className="create-huddle-meaning-row">
-                    <span className="create-huddle-letter">{letter}</span>
+                {letterKeys.map(key => (
+                  <div key={key} className="create-huddle-meaning-row">
+                    <span className="create-huddle-letter">{key[0]}</span>
                     <input
                       type="text"
                       className="create-huddle-meaning-input"
-                      placeholder={`What does ${letter} stand for?`}
-                      value={meanings[letter] || ''}
-                      onChange={e => setMeanings(prev => ({ ...prev, [letter]: e.target.value }))}
+                      placeholder={`What does ${key[0]} stand for?`}
+                      value={meanings[key] || ''}
+                      onChange={e => setMeanings(prev => ({ ...prev, [key]: e.target.value }))}
                       maxLength={30}
                     />
                   </div>
@@ -165,7 +181,7 @@ export default function CreateHuddle({ session, onHuddleCreated, onCancel }) {
             <button
               className="create-huddle-btn"
               onClick={handleCreate}
-              disabled={loading || !word || uniqueLetters.some(l => !meanings[l]?.trim())}
+              disabled={loading || !word || letterKeys.some(k => !meanings[k]?.trim())}
             >
               {loading ? 'Creating…' : 'Create Huddle'}
             </button>
