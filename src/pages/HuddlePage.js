@@ -58,12 +58,15 @@ export default function HuddlePage({ session, isFounder }) {
       try {
         setLoading(true);
 
-        // 1. Get huddle membership
-        const { data: membership } = await supabase
+        // 1. Get huddle membership — pick most recently joined
+        const { data: memberships } = await supabase
           .from('huddle_members')
           .select('huddle_id')
           .eq('user_id', currentUserId)
-          .single();
+          .order('joined_at', { ascending: false })
+          .limit(1);
+
+        const membership = memberships?.[0];
 
         if (!membership) {
           setLoading(false);
