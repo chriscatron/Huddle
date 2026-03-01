@@ -59,8 +59,8 @@ export default function HuddlePage({ session, isFounder }) {
   // ── Real Supabase fetch ─────────────────
   useEffect(() => {
     if (!currentUserId) return;
-    loadHuddle();
-  }, [currentUserId, activeHuddleId]);
+    loadHuddle(); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [currentUserId, activeHuddleId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadHuddle(switchToHuddleId = null) {
     try {
