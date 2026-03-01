@@ -85,17 +85,18 @@ export default function CreateHuddle({ session, onHuddleCreated, onCancel }) {
     const letterMeanings = {};
     letterKeys.forEach(k => { letterMeanings[k] = meanings[k] || k; });
 
-    const { data: huddleId, error: huddleError } = await supabase
-      .rpc('create_huddle', {
-        p_name:            name,
-        p_invite_token:    inviteToken,
-        p_word:            word.toUpperCase(),
-        p_letter_meanings: letterMeanings,
-        p_user_id:         userId,
-      });
+    const { data, error: fnError } = await supabase.functions.invoke('create-huddle', {
+      body: {
+        name,
+        invite_token:    inviteToken,
+        word:            word.toUpperCase(),
+        letter_meanings: letterMeanings,
+        user_id:         userId,
+      }
+    });
 
-    if (huddleError) {
-      setError(huddleError.message || 'Could not create huddle. Please try again.');
+    if (fnError || data?.error) {
+      setError(fnError?.message || data?.error || 'Could not create huddle. Please try again.');
       setLoading(false);
       return;
     }
