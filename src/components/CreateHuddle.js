@@ -31,7 +31,8 @@ export default function CreateHuddle({ session, onHuddleCreated, onCancel }) {
   const [meanings, setMeanings] = useState({});
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState('');
-  const [code,     setCode]     = useState('');
+  const [code,      setCode]      = useState('');
+  const [newHuddleId, setNewHuddleId] = useState(null);
 
   // Lock body scroll while overlay is open
   useEffect(() => {
@@ -102,6 +103,7 @@ export default function CreateHuddle({ session, onHuddleCreated, onCancel }) {
     }
 
     setCode(inviteToken);
+    setNewHuddleId(data.huddle_id);
     setLoading(false);
     setStep(STEPS.DONE);
   }
@@ -204,7 +206,7 @@ export default function CreateHuddle({ session, onHuddleCreated, onCancel }) {
             </button>
             <button
               className="create-huddle-btn create-huddle-btn-secondary"
-              onClick={() => onHuddleCreated()}
+              onClick={() => onHuddleCreated(newHuddleId)}
             >
               Go to my Huddle
             </button>

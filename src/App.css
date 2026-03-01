@@ -873,6 +873,29 @@ img { max-width: 100%; display: block; }
 /* ═══════════════════════════════════════════
    HUDDLE VIEW (settings / profile tab)
    ═══════════════════════════════════════════ */
+.huddle-switcher {
+  display: flex; flex-direction: column; gap: var(--s2);
+  width: 100%; margin-bottom: var(--s4);
+}
+.huddle-switch-btn {
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--r-md); padding: 10px 16px;
+  font-size: 15px; font-family: var(--body); color: var(--ink);
+  text-align: left; cursor: pointer;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.huddle-switch-btn.active {
+  border-color: var(--purple); background: rgba(107,70,168,0.08);
+  color: var(--purple-dark); font-weight: 600;
+}
+.huddle-switch-default { color: var(--gold); font-size: 14px; }
+.huddle-switch-set-default {
+  background: none; border: none;
+  font-size: 13px; color: var(--ink-soft);
+  text-align: left; cursor: pointer; padding: 4px 0;
+  text-decoration: underline;
+}
+
 .huddle-view {
   display: flex; flex-direction: column; align-items: center;
   padding: var(--s4) var(--s6) var(--s10);
@@ -1307,4 +1330,4 @@ img { max-width: 100%; display: block; }
   display: flex; align-items: center; justify-content: center;
   padding: 0 4px;
   line-height: 1;
-} 
+}

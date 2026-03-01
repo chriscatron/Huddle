@@ -48,84 +48,101 @@ export default function HuddlePage({ session, isFounder }) {
   const [inviteCopied,      setInviteCopied]      = useState(false);
   const [createHuddleOpen,  setCreateHuddleOpen]  = useState(false);
   const [newPostCount,      setNewPostCount]       = useState(0);
+  const [allHuddles,        setAllHuddles]        = useState([]);
+  const [activeHuddleId,    setActiveHuddleId]    = useState(() => {
+    return localStorage.getItem(`default_huddle_${session?.user?.id}`) || null;
+  });
+  const [showDefaultPrompt, setShowDefaultPrompt] = useState(false);
+  const [pendingDefaultId,  setPendingDefaultId]  = useState(null);
   const huddleIdRef = useRef(null);
 
   // ── Real Supabase fetch ─────────────────
   useEffect(() => {
     if (!currentUserId) return;
+    loadHuddle();
+  }, [currentUserId, activeHuddleId]);
 
-    async function load() {
-      try {
-        setLoading(true);
+  async function loadHuddle(switchToHuddleId = null) {
+    try {
+      setLoading(true);
 
-        // 1. Get huddle membership — pick most recently joined
-        const { data: memberships } = await supabase
-          .from('huddle_members')
-          .select('huddle_id')
-          .eq('user_id', currentUserId)
-          .order('joined_at', { ascending: false })
-          .limit(1);
+      // 1. Get ALL huddle memberships
+      const { data: memberships } = await supabase
+        .from('huddle_members')
+        .select('huddle_id, joined_at')
+        .eq('user_id', currentUserId)
+        .order('joined_at', { ascending: false });
 
-        const membership = memberships?.[0];
-
-        if (!membership) {
-          setLoading(false);
-          return;
-        }
-
-        // 2. Load huddle details
-        const { data: huddleData } = await supabase
-          .from('huddles')
-          .select('*')
-          .eq('id', membership.huddle_id)
-          .single();
-
-        if (huddleData) setHuddle(huddleData);
-
-        // 3. Load active word
-        const { data: wordData } = await supabase
-          .from('huddle_words')
-          .select('*')
-          .eq('huddle_id', membership.huddle_id)
-          .eq('is_active', true)
-          .single();
-
-        if (wordData) setActiveWord(wordData);
-
-        // 4. Load posts with author, reactions, comment count
-        const { data: postsData } = await supabase
-          .from('posts')
-          .select('*, author:profiles(username, avatar_url), reactions(*), comments(count)')
-          .eq('huddle_id', membership.huddle_id)
-          .order('created_at', { ascending: false });
-
-        if (postsData) {
-          postsData.forEach(p => {
-            p.comment_count = p.comments?.[0]?.count ?? 0;
-            delete p.comments;
-          });
-          setPosts(postsData);
-        }
-
-        huddleIdRef.current = membership.huddle_id;
+      if (!memberships || memberships.length === 0) {
         setLoading(false);
-
-        // 5. Load members (non-blocking)
-        supabase
-          .rpc('get_huddle_members', { p_huddle_id: membership.huddle_id })
-          .then(({ data: membersData }) => {
-            if (membersData) setMembers(membersData);
-          });
-
-      } catch (err) {
-        console.error('[Huddle] load error:', err);
-        setLoading(false);
+        return;
       }
+
+      // Load all huddle names for switcher
+      const huddleIds = memberships.map(m => m.huddle_id);
+      const { data: huddlesData } = await supabase
+        .from('huddles')
+        .select('id, name')
+        .in('id', huddleIds);
+      if (huddlesData) setAllHuddles(huddlesData);
+
+      // Determine which huddle to show
+      const defaultId = localStorage.getItem(`default_huddle_${currentUserId}`);
+      const targetId = switchToHuddleId || activeHuddleId || defaultId || memberships[0].huddle_id;
+
+      // 2. Load huddle details
+      const { data: huddleData } = await supabase
+        .from('huddles')
+        .select('*')
+        .eq('id', targetId)
+        .single();
+
+      if (huddleData) setHuddle(huddleData);
+
+      // 3. Load active word
+      const { data: wordData } = await supabase
+        .from('huddle_words')
+        .select('*')
+        .eq('huddle_id', targetId)
+        .eq('is_active', true)
+        .single();
+
+      if (wordData) setActiveWord(wordData);
+
+      // 4. Load posts
+      const { data: postsData } = await supabase
+        .from('posts')
+        .select('*, author:profiles(username, avatar_url), reactions(*), comments(count)')
+        .eq('huddle_id', targetId)
+        .order('created_at', { ascending: false });
+
+      if (postsData) {
+        postsData.forEach(p => {
+          p.comment_count = p.comments?.[0]?.count ?? 0;
+          delete p.comments;
+        });
+        setPosts(postsData);
+      }
+
+      huddleIdRef.current = targetId;
+      if (targetId !== activeHuddleId) setActiveHuddleId(targetId);
+      setLoading(false);
+
+      // 5. Load members (non-blocking)
+      supabase
+        .rpc('get_huddle_members', { p_huddle_id: targetId })
+        .then(({ data: membersData }) => {
+          if (membersData) setMembers(membersData);
+        });
+
+    } catch (err) {
+      console.error('[Huddle] load error:', err);
+      setLoading(false);
     }
+  }
 
-    load();
-
-    // Real-time subscription for new posts
+  // ── Real-time subscription ──────────────
+  useEffect(() => {
     let channel;
     const setupChannel = () => {
       if (!huddleIdRef.current) return;
@@ -137,7 +154,6 @@ export default function HuddlePage({ session, isFounder }) {
           table: 'posts',
           filter: `huddle_id=eq.${huddleIdRef.current}`,
         }, async (payload) => {
-          // Fetch full post with author and reactions
           const { data } = await supabase
             .from('posts')
             .select('*, author:profiles(username, avatar_url), reactions(*), comments(count)')
@@ -147,11 +163,8 @@ export default function HuddlePage({ session, isFounder }) {
           if (data) {
             data.comment_count = data.comments?.[0]?.count ?? 0;
             delete data.comments;
-
-            // Only add if not our own post (we already added it optimistically)
             if (data.author_id !== currentUserId) {
               setPosts(prev => {
-                // Avoid duplicates
                 if (prev.some(p => p.id === data.id)) return prev;
                 setNewPostCount(c => c + 1);
                 return [data, ...prev];
@@ -162,14 +175,10 @@ export default function HuddlePage({ session, isFounder }) {
         .subscribe();
     };
 
-    // Wait for load to set huddleId then subscribe
     setTimeout(setupChannel, 2000);
+    return () => { if (channel) supabase.removeChannel(channel); };
+  }, [currentUserId, activeHuddleId]);
 
-    return () => {
-      if (channel) supabase.removeChannel(channel);
-    };
-
-  }, [currentUserId]);
 
   // ── Toggle a letter — single select only ──
   function toggleLetter(letter) {
@@ -181,6 +190,25 @@ export default function HuddlePage({ session, isFounder }) {
   function switchToFeed() {
     setActiveTab(TABS.FEED);
     setNewPostCount(0);
+  }
+
+  function switchHuddle(huddleId) {
+    setActiveHuddleId(huddleId);
+    setActiveTab(TABS.FEED);
+    setSelectedLetters([]);
+    setNewPostCount(0);
+  }
+
+  function setDefaultHuddle(huddleId) {
+    localStorage.setItem(`default_huddle_${currentUserId}`, huddleId);
+    setShowDefaultPrompt(false);
+  }
+
+  function handleHuddleCreated(newHuddleId) {
+    setPendingDefaultId(newHuddleId);
+    setShowDefaultPrompt(true);
+    setCreateHuddleOpen(false);
+    setActiveHuddleId(newHuddleId);
   }
 
   // ── Filtered posts ──────────────────────
@@ -252,9 +280,30 @@ export default function HuddlePage({ session, isFounder }) {
         {createHuddleOpen && (
           <CreateHuddle
             session={session}
-            onHuddleCreated={() => window.location.reload()}
+            onHuddleCreated={handleHuddleCreated}
             onCancel={() => setCreateHuddleOpen(false)}
           />
+        )}
+
+        {/* Default huddle prompt */}
+        {showDefaultPrompt && (
+          <>
+            <div className="composer-backdrop" onClick={() => setShowDefaultPrompt(false)} />
+            <div className="composer-modal" style={{ padding: 24, textAlign: 'center' }}>
+              <h3 style={{ fontFamily: 'var(--heading)', color: 'var(--purple-dark)', marginBottom: 8 }}>
+                Switched to new Huddle!
+              </h3>
+              <p style={{ color: 'var(--ink-soft)', marginBottom: 20, fontSize: 15 }}>
+                Would you like to make this your default Huddle?
+              </p>
+              <button className="create-huddle-btn" onClick={() => setDefaultHuddle(pendingDefaultId)}>
+                Yes, make it default
+              </button>
+              <button className="create-huddle-back" style={{ marginTop: 12 }} onClick={() => setShowDefaultPrompt(false)}>
+                No thanks
+              </button>
+            </div>
+          </>
         )}
       </div>
     );
@@ -360,6 +409,31 @@ export default function HuddlePage({ session, isFounder }) {
         {activeTab === TABS.HUDDLE && (
           <div className="huddle-view">
             <img src={HuddleLogo} alt="Huddle" className="huddle-view-logo" />
+
+            {/* Huddle switcher — only show if member of 2+ huddles */}
+            {allHuddles.length > 1 && (
+              <div className="huddle-switcher">
+                {allHuddles.map(h => (
+                  <button
+                    key={h.id}
+                    className={`huddle-switch-btn ${h.id === activeHuddleId ? 'active' : ''}`}
+                    onClick={() => switchHuddle(h.id)}
+                  >
+                    {h.name}
+                    {localStorage.getItem(`default_huddle_${currentUserId}`) === h.id && (
+                      <span className="huddle-switch-default">★</span>
+                    )}
+                  </button>
+                ))}
+                <button
+                  className="huddle-switch-set-default"
+                  onClick={() => setDefaultHuddle(activeHuddleId)}
+                >
+                  Set {huddle?.name} as default
+                </button>
+              </div>
+            )}
+
             <h2 className="huddle-view-name">Some days it's gratitude. Some days it's honesty. Some days it's a lesson learned.</h2>
             <p className="huddle-view-sub">Pop in, share a thought, keep going.</p>
 
@@ -469,7 +543,7 @@ export default function HuddlePage({ session, isFounder }) {
       {createHuddleOpen && (
         <CreateHuddle
           session={session}
-          onHuddleCreated={() => window.location.reload()}
+          onHuddleCreated={handleHuddleCreated}
           onCancel={() => setCreateHuddleOpen(false)}
         />
       )}
