@@ -54,6 +54,8 @@ export default function HuddlePage({ session, isFounder }) {
   });
   const [showDefaultPrompt, setShowDefaultPrompt] = useState(false);
   const [pendingDefaultId,  setPendingDefaultId]  = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting,          setDeleting]          = useState(false);
   const huddleIdRef = useRef(null);
 
   // ── Real Supabase fetch ─────────────────
@@ -209,6 +211,31 @@ export default function HuddlePage({ session, isFounder }) {
     setShowDefaultPrompt(true);
     setCreateHuddleOpen(false);
     setActiveHuddleId(newHuddleId);
+  }
+
+  async function deleteHuddle() {
+    setDeleting(true);
+    const { error } = await supabase.functions.invoke('delete-huddle', {
+      body: { huddle_id: huddle.id, user_id: currentUserId }
+    });
+
+    if (error) {
+      alert('Could not delete huddle. Please try again.');
+      setDeleting(false);
+      setShowDeleteConfirm(false);
+      return;
+    }
+
+    // Remove from local state and switch to another huddle if available
+    const remaining = allHuddles.filter(h => h.id !== huddle.id);
+    if (remaining.length > 0) {
+      localStorage.removeItem(`default_huddle_${currentUserId}`);
+      setActiveHuddleId(remaining[0].id);
+    } else {
+      window.location.reload();
+    }
+    setShowDeleteConfirm(false);
+    setDeleting(false);
   }
 
   // ── Filtered posts ──────────────────────
@@ -487,6 +514,14 @@ export default function HuddlePage({ session, isFounder }) {
               <button className="huddle-view-invite-btn" onClick={handleCopyInvite}>
                 {inviteCopied ? '✓ Invite code copied' : '🔗 Copy invite code'}
               </button>
+              {isFounder && huddle?.founder_id === currentUserId && (
+                <button
+                  className="huddle-view-delete-btn"
+                  onClick={() => setShowDeleteConfirm(true)}
+                >
+                  🗑 Delete this Huddle
+                </button>
+              )}
               <button className="huddle-view-signout-btn" onClick={signOut}>
                 Sign out
               </button>
@@ -539,7 +574,31 @@ export default function HuddlePage({ session, isFounder }) {
         userId={currentUserId}
       />
 
-      {/* ══ Create Huddle ════════════════════ */}
+      {/* ══ Delete Confirmation ══════════════ */}
+      {showDeleteConfirm && (
+        <>
+          <div className="composer-backdrop" onClick={() => setShowDeleteConfirm(false)} />
+          <div className="composer-modal" style={{ padding: 24, textAlign: 'center' }}>
+            <h3 style={{ fontFamily: 'var(--heading)', color: 'var(--purple-dark)', marginBottom: 8 }}>
+              Delete {huddle?.name}?
+            </h3>
+            <p style={{ color: 'var(--ink-soft)', marginBottom: 20, fontSize: 15 }}>
+              This will permanently delete the huddle, all posts, comments, and reactions. This cannot be undone.
+            </p>
+            <button
+              className="huddle-view-delete-btn"
+              onClick={deleteHuddle}
+              disabled={deleting}
+              style={{ width: '100%', marginBottom: 12 }}
+            >
+              {deleting ? 'Deleting…' : 'Yes, delete permanently'}
+            </button>
+            <button className="create-huddle-back" onClick={() => setShowDeleteConfirm(false)}>
+              Cancel
+            </button>
+          </div>
+        </>
+      )}
       {createHuddleOpen && (
         <CreateHuddle
           session={session}

@@ -972,6 +972,14 @@ img { max-width: 100%; display: block; }
   min-height: 52px; width: 100%;
 }
 
+.huddle-view-delete-btn {
+  background: none; border: 1px solid rgba(180,40,40,0.3);
+  color: #b42828; border-radius: var(--r-md);
+  padding: var(--s4); font-family: var(--heading);
+  font-size: 14px; letter-spacing: 0.06em;
+  min-height: 52px; width: 100%; cursor: pointer;
+}
+
 /* ─────────────────────────────────────────
    Scrollbar
    ───────────────────────────────────────── */
