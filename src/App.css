@@ -1264,6 +1264,31 @@ img { max-width: 100%; display: block; }
   cursor: pointer;
 }
 
+/* ── First Visit Intro ── */
+.login-intro {
+  display: flex; flex-direction: column; gap: var(--s4); width: 100%;
+}
+.login-intro-title {
+  font-family: var(--heading); font-size: 18px;
+  color: var(--purple-dark); text-align: center; margin: 0;
+}
+.login-intro-body {
+  font-size: 14px; color: var(--ink-soft); line-height: 1.6;
+  text-align: center; margin: 0;
+}
+.login-intro-steps {
+  display: flex; flex-direction: column; gap: var(--s3);
+  background: var(--surface-2); border-radius: var(--r-md);
+  padding: var(--s4);
+}
+.login-intro-step {
+  display: flex; align-items: flex-start; gap: var(--s3);
+  font-size: 14px; color: var(--ink);
+}
+.login-intro-icon {
+  color: var(--purple); font-size: 12px; flex-shrink: 0; margin-top: 2px;
+}
+
 .login-landing {
   display: flex; flex-direction: column; gap: var(--s3); width: 100%;
 }

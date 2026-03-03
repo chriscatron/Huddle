@@ -11,17 +11,23 @@ import { supabase, sendOtpCode, verifyOtpCode } from '../lib/supabaseClient';
 import HuddleLogo from '../assets/Huddle_Logo_Subject.png';
 
 const STEPS = {
+  INTRO:        'intro',
   LANDING:      'landing',
-  WELCOME:      'welcome',      // PWA install instructions for new users
+  WELCOME:      'welcome',
   INVITE_CODE:  'invite_code',
   INVITE_NAME:  'invite_name',
   INVITE_EMAIL: 'invite_email',
+  CREATE_NAME:  'create_name',
+  CREATE_EMAIL: 'create_email',
   EMAIL:        'email',
   CODE:         'code',
 };
 
 export default function LoginPage() {
-  const [step,        setStep]        = useState(STEPS.LANDING);
+  const [step,        setStep]        = useState(() => {
+    return localStorage.getItem('huddle_visited') ? STEPS.LANDING : STEPS.INTRO;
+  });
+  const [isCreating,  setIsCreating]  = useState(false);
   const [inviteCode,  setInviteCode]  = useState('');
   const [huddle,      setHuddle]      = useState(null); // huddle found by code
   const [name,        setName]        = useState('');
@@ -141,6 +147,16 @@ export default function LoginPage() {
         .single();
     }
 
+    // If creating — set name, is_founder, and flag to open create dialog
+    if (isCreating && authData?.user) {
+      await supabase
+        .from('profiles')
+        .update({ username: name.trim(), is_founder: true })
+        .eq('id', authData.user.id);
+
+      localStorage.setItem('huddle_open_create', 'true');
+    }
+
     // App.js onAuthStateChange fires and routes to HuddlePage
     setLoading(false);
   }
@@ -171,6 +187,44 @@ export default function LoginPage() {
     inputRefs.current[0]?.focus();
   }
 
+  function dismissIntro() {
+    localStorage.setItem('huddle_visited', 'true');
+    setStep(STEPS.LANDING);
+  }
+
+  function startCreate() {
+    setIsCreating(true);
+    setStep(STEPS.CREATE_NAME);
+  }
+
+  function startJoin() {
+    setIsCreating(false);
+    setStep(STEPS.WELCOME);
+  }
+
+  function handleCreateNameSubmit(e) {
+    e.preventDefault();
+    if (!name.trim()) return;
+    setStep(STEPS.CREATE_EMAIL);
+  }
+
+  async function handleCreateEmail(e) {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setLoading(true);
+    setError('');
+
+    const { error } = await sendOtpCode(email.trim().toLowerCase());
+    if (error) {
+      setError(error.message || 'Could not send code. Please try again.');
+      setLoading(false);
+      return;
+    }
+
+    setLoading(false);
+    setStep(STEPS.CODE);
+  }
+
   // ─────────────────────────────────────────
   // Render
   // ─────────────────────────────────────────
@@ -185,11 +239,48 @@ export default function LoginPage() {
           <p className="login-tagline">A simple way to stay close,<br />even on ordinary days.</p>
         </div>
 
+        {/* ── First Visit Intro ── */}
+        {step === STEPS.INTRO && (
+          <div className="login-intro">
+            <h2 className="login-intro-title">Welcome to Huddle</h2>
+            <p className="login-intro-body">
+              Huddle is a private space for small groups — friends, family, a team — to stay genuinely connected.
+            </p>
+            <p className="login-intro-body">
+              Your group picks a word. Each letter becomes a reflection theme. Once a week, members pop in and share a thought. No noise, no algorithm — just your people.
+            </p>
+            <div className="login-intro-steps">
+              <div className="login-intro-step">
+                <span className="login-intro-icon">✦</span>
+                <span>Choose a word that means something to your group</span>
+              </div>
+              <div className="login-intro-step">
+                <span className="login-intro-icon">✦</span>
+                <span>Each letter becomes a weekly reflection prompt</span>
+              </div>
+              <div className="login-intro-step">
+                <span className="login-intro-icon">✦</span>
+                <span>Invite your people with a private code</span>
+              </div>
+              <div className="login-intro-step">
+                <span className="login-intro-icon">✦</span>
+                <span>Share, react, and stay close</span>
+              </div>
+            </div>
+            <button className="login-btn" onClick={dismissIntro}>
+              Let's go
+            </button>
+          </div>
+        )}
+
         {/* ── Landing ── */}
         {step === STEPS.LANDING && (
           <div className="login-landing">
-            <button className="login-btn" onClick={() => setStep(STEPS.WELCOME)}>
-              I have an invite code
+            <button className="login-btn" onClick={startCreate}>
+              ✦ Create a Huddle
+            </button>
+            <button className="login-btn" onClick={startJoin}>
+              Join a Huddle
             </button>
             <button className="login-btn-secondary" onClick={() => setStep(STEPS.EMAIL)}>
               Sign in
@@ -294,6 +385,49 @@ export default function LoginPage() {
               {loading ? 'Sending…' : 'Send code'}
             </button>
             <p className="login-fine-print">We'll email you a 6-digit code to verify.</p>
+          </form>
+        )}
+
+        {/* ── Create: What's your name ── */}
+        {step === STEPS.CREATE_NAME && (
+          <form className="login-form" onSubmit={handleCreateNameSubmit}>
+            <p className="login-otp-prompt">Let's set up your Huddle</p>
+            <label className="login-label">What should we call you?</label>
+            <input
+              type="text" className="login-input"
+              placeholder="Your first name"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              autoFocus maxLength={40} required
+            />
+            <button type="submit" className="login-btn" disabled={!name.trim()}>
+              Continue
+            </button>
+            <button type="button" className="login-resend-btn" onClick={() => setStep(STEPS.LANDING)}>
+              ← Back
+            </button>
+          </form>
+        )}
+
+        {/* ── Create: Email ── */}
+        {step === STEPS.CREATE_EMAIL && (
+          <form className="login-form" onSubmit={handleCreateEmail}>
+            <label className="login-label">Your email address</label>
+            <input
+              type="email" className="login-input"
+              placeholder="you@example.com"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              disabled={loading} autoFocus required
+            />
+            {error && <p className="login-error">{error}</p>}
+            <button type="submit" className="login-btn" disabled={loading || !email.trim()}>
+              {loading ? 'Sending…' : 'Send code'}
+            </button>
+            <p className="login-fine-print">We'll email you a 6-digit code to verify.</p>
+            <button type="button" className="login-resend-btn" onClick={() => setStep(STEPS.CREATE_NAME)}>
+              ← Back
+            </button>
           </form>
         )}
 

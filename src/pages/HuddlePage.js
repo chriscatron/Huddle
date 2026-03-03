@@ -68,6 +68,12 @@ export default function HuddlePage({ session, isFounder }) {
     try {
       setLoading(true);
 
+      // Auto-open create if arriving from create flow
+    if (localStorage.getItem('huddle_open_create')) {
+      localStorage.removeItem('huddle_open_create');
+      setCreateHuddleOpen(true);
+    }
+    
       // 1. Get ALL huddle memberships
       const { data: memberships } = await supabase
         .from('huddle_members')
