@@ -262,11 +262,38 @@ export default function HuddlePage({ session, isFounder }) {
   }
 
   function handleCopyInvite() {
-    const url = `${window.location.origin}/invite/${huddle?.invite_token}`;
-    navigator.clipboard.writeText(url).then(() => {
+    const code = huddle?.invite_token;
+    if (!code) return;
+
+    const message = `You're invited to join my Huddle! \n\nGo to huddle.bluexpanse.net and enter invite code: ${code}`;
+
+    // Use clipboard API with fallback for iOS PWA
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(message).then(() => {
+        setInviteCopied(true);
+        setTimeout(() => setInviteCopied(false), 2500);
+      }).catch(() => fallbackCopy(message));
+    } else {
+      fallbackCopy(message);
+    }
+  }
+
+  function fallbackCopy(text) {
+    const el = document.createElement('textarea');
+    el.value = text;
+    el.style.position = 'fixed';
+    el.style.opacity = '0';
+    document.body.appendChild(el);
+    el.focus();
+    el.select();
+    try {
+      document.execCommand('copy');
       setInviteCopied(true);
       setTimeout(() => setInviteCopied(false), 2500);
-    });
+    } catch (e) {
+      console.error('Copy failed', e);
+    }
+    document.body.removeChild(el);
   }
 
   // ── Prompt text for selected letter ──
