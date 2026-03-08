@@ -359,7 +359,7 @@ img { max-width: 100%; display: block; }
   border-radius: var(--r-full);
   padding: var(--s2) var(--s3);
   min-height: 36px;
-  white-space: nowrap;
+  white-space: normal; text-align: left;
   flex-shrink: 0;
   color: var(--ink-mid);
   transition: all 0.15s;
