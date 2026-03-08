@@ -160,13 +160,13 @@ export default function CreateHuddle({ session, onHuddleCreated, onCancel }) {
                 {letterKeys.map(key => (
                   <div key={key} className="create-huddle-meaning-row">
                     <span className="create-huddle-letter">{key[0]}</span>
-                    <input
-                      type="text"
+                    <textarea
                       className="create-huddle-meaning-input"
-                      placeholder={`What does ${key[0]} stand for?`}
+                      placeholder={`What does ${key[0]} stand for? e.g. Rant — what's something you want to rant about?`}
                       value={meanings[key] || ''}
                       onChange={e => setMeanings(prev => ({ ...prev, [key]: e.target.value }))}
-                      maxLength={30}
+                      maxLength={120}
+                      rows={2}
                     />
                   </div>
                 ))}

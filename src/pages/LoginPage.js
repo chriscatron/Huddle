@@ -247,7 +247,7 @@ export default function LoginPage() {
               Huddle is a private space for small groups — friends, family, a team — to stay genuinely connected.
             </p>
             <p className="login-intro-body">
-              Your group picks a word. Each letter becomes a reflection theme. Once a week, members pop in and share a thought. No noise, no algorithm — just your people.
+              Your group picks a word. Each letter becomes a reflection theme. Members pop in, share a thought, and stay connected. No noise, no algorithm — just your people.
             </p>
             <div className="login-intro-steps">
               <div className="login-intro-step">
@@ -256,7 +256,7 @@ export default function LoginPage() {
               </div>
               <div className="login-intro-step">
                 <span className="login-intro-icon">✦</span>
-                <span>Each letter becomes a weekly reflection prompt</span>
+                <span>Each letter becomes a reflection prompt for your group</span>
               </div>
               <div className="login-intro-step">
                 <span className="login-intro-icon">✦</span>

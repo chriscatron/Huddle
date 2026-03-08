@@ -121,12 +121,14 @@ img { max-width: 100%; display: block; }
 .login-page {
   min-height: 100%;
   display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
+  align-items: center; justify-content: flex-start;
   padding: var(--s6) var(--s5);
-  padding-top:    calc(var(--s6) + var(--safe-top));
+  padding-top:    calc(var(--s8) + var(--safe-top));
   padding-bottom: calc(var(--s6) + var(--safe-bottom));
   background: var(--bg);
-  position: relative; overflow: hidden;
+  position: relative; overflow-x: hidden; overflow-y: auto;
+  /* Prevent page jumping when iOS keyboard opens */
+  -webkit-overflow-scrolling: touch;
 }
 
 .login-page::before {
@@ -1201,8 +1203,13 @@ img { max-width: 100%; display: block; }
   flex: 1; background: var(--surface-2);
   border: 1px solid var(--border-mid);
   border-radius: var(--r-md);
-  padding: var(--s2) var(--s3);
-  font-size: 15px; color: var(--ink); outline: none;
+  padding: var(--s3);
+  font-size: 16px; color: var(--ink); outline: none;
+  font-family: var(--body); line-height: 1.4;
+  resize: none; min-height: 56px;
+}
+.create-huddle-meaning-input:focus {
+  border-color: var(--purple);
 }
 .create-huddle-meaning-input:focus { border-color: var(--purple); }
 
