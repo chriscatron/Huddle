@@ -1204,7 +1204,7 @@ img { max-width: 100%; display: block; }
   border: 1px solid var(--border-mid);
   border-radius: var(--r-md);
   padding: var(--s3);
-  font-size: 16px; color: var(--ink); outline: none;
+  font-size: 16px; color: var(--ink); outline: none; text-align: left;
   font-family: var(--body); line-height: 1.4;
   resize: none; min-height: 56px;
 }
