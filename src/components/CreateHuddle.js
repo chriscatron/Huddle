@@ -162,7 +162,7 @@ export default function CreateHuddle({ session, onHuddleCreated, onCancel }) {
                     <span className="create-huddle-letter">{key[0]}</span>
                     <textarea
                       className="create-huddle-meaning-input"
-                      placeholder={`What does ${key[0]} stand for?`}
+                      placeholder={`What does ${key[0]} stand for? `}
                       value={meanings[key] || ''}
                       onChange={e => setMeanings(prev => ({ ...prev, [key]: e.target.value }))}
                       maxLength={120}
